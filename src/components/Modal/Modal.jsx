@@ -12,7 +12,7 @@ export function Modal({ onClose, largeImage }) {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  });
 
   // Відслідковування натискання Escape і виклик функції закриття модалки
   const handleKeyDown = e => {
