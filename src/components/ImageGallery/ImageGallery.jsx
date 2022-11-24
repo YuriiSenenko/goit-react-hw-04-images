@@ -1,6 +1,6 @@
 import { ImmageGalleryItem } from 'components/ImageGalleryItem/ImageGalleryItem';
 import './ImageGallery.css';
-// import React from 'react';
+
 import PropTypes from 'prop-types';
 
 export function ImageGallery({ gallery, onModal, modalImg }) {
