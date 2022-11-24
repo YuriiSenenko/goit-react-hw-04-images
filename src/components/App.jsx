@@ -28,7 +28,6 @@ export function App() {
 
     setStatus('pending');
 
-    //! Fetch
     fetchGallery(searchValue, page)
       .then(response => response.json())
       .then(({ hits }) => {
