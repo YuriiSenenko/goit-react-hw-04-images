@@ -1,39 +1,40 @@
-import React from 'react';
-import { Component } from 'react';
+import { useEffect } from 'react';
+
 import './Modal.css';
 import PropTypes from 'prop-types';
 
-export class Modal extends Component {
+export function Modal({ onClose, largeImage }) {
   // Закриття модалки по кліку на Escape
-  componentDidMount() {
-    window.addEventListener('keydown', this.handleKeyDown);
-  }
-  // Чистимо слухача після закриття модалки
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.handleKeyDown);
-  }
+  // вішає EventListener на Escape і знімає
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   // Відслідковування натискання Escape і виклик функції закриття модалки
-  handleKeyDown = e => {
+  const handleKeyDown = e => {
     if (e.code === 'Escape') {
-      this.props.onClose();
+      onClose();
     }
   };
 
   // Закриття по кліку на бекдроп
-  hanleBeckdropClick = event => {
+  const hanleBeckdropClick = event => {
     if (event.target === event.currentTarget) {
-      this.props.onClose();
+      onClose();
     }
   };
-  render() {
-    return (
-      <div className="Overlay" onClick={this.hanleBeckdropClick}>
-        <div className="Modal">
-          <img src={this.props.largeImage} alt="" />
-        </div>
+
+  return (
+    <div className="Overlay" onClick={hanleBeckdropClick}>
+      <div className="Modal">
+        <img src={largeImage} alt="" />
       </div>
-    );
-  }
+    </div>
+  );
 }
 
 Modal.propTypes = {

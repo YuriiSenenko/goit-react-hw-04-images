@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
@@ -11,112 +11,98 @@ import { Modal } from './Modal/Modal';
 import { Loader } from './Loader/Loader';
 import { fetchGallery } from '../api/GalleryAPI';
 
-export class App extends Component {
-  state = {
-    searchValue: '',
-    page: 1,
-    gallery: [],
-    showModal: false,
-    error: null,
-    status: 'idle',
-    largeImageURL: '',
-    loadMore: false,
-  };
+export function App() {
+  const [searchValue, setSearchValue] = useState('');
+  const [page, setPage] = useState(1);
+  const [gallery, setGallery] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState(null);
+  const [status, setStatus] = useState('idle');
+  const [largeImageURL, setLargeImageURL] = useState('');
+  const [loadMore, setLoadMore] = useState(false);
 
-  componentDidUpdate = (_, prevState) => {
-    const { page, searchValue } = this.state;
-    const prevValue = prevState.searchValue;
-
-    if (prevValue !== searchValue || prevState.page !== page) {
-      //! Запуск loader
-      this.setState({ status: 'pending' });
-
-      //! Fetch
-      fetchGallery(searchValue, this.state.page)
-        .then(response => response.json())
-        .then(({ hits }) => {
-          this.showLoadMore(hits);
-          this.setState(() => ({
-            gallery: [...this.state.gallery, ...hits],
-            status: 'resolved',
-          }));
-        })
-
-        .catch(error => this.setState({ error, status: 'rejected' }));
+  useEffect(() => {
+    if (searchValue === '') {
+      return;
     }
-  };
 
-  showLoadMore = arr => {
+    setStatus('pending');
+
+    //! Fetch
+    fetchGallery(searchValue, page)
+      .then(response => response.json())
+      .then(({ hits }) => {
+        showLoadMore(hits);
+        setGallery(gallery => [...gallery, ...hits]);
+        setStatus('resolved');
+      })
+
+      .catch(error => {
+        setError(error);
+        setStatus('rejected');
+      });
+  }, [page, searchValue]);
+
+  const showLoadMore = arr => {
     if (arr.length === 12) {
-      this.setState({ loadMore: true });
+      setLoadMore(true);
     } else if (arr.length === 0) {
-      this.setState({ loadMore: false });
+      setLoadMore(false);
       toast.info('Nothing was found for your query!');
     } else {
-      this.setState({ loadMore: false });
+      setLoadMore(false);
     }
   };
 
   // Записуємо результат пошуку в state App
-  handleFormSubmit = searchValue => {
-    this.setState({ searchValue: searchValue, page: 1, gallery: [] });
+  const handleFormSubmit = searchValue => {
+    setSearchValue(searchValue);
+    setPage(1);
+    setGallery([]);
   };
 
-  // Змінює сторінку пагінації
-  changePage = () => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
+  // Змінює сторінку пагінації------------------------------------ перевірити
+  const changePage = () => {
+    console.log(page);
+    setPage(prevState => prevState + 1);
   };
 
-  // Відкривашка модального вікна
-  toggleModal = () => {
-    this.setState(state => ({
-      showModal: !state.showModal,
-    }));
+  // Відкривашка модального вікна ------------------------------------ перевірити
+  const toggleModal = () => {
+    setShowModal(prevState => !showModal);
   };
 
-  modalImg = img => {
-    this.setState({ largeImageURL: img });
+  const modalImg = img => {
+    setLargeImageURL(img);
   };
 
-  render() {
-    const { status, gallery, showModal, loadMore } = this.state;
-
-    if (status === 'idle') {
-      // return;
-    }
-
-    if (status === 'pending') {
-      // return;
-    }
-    if (status === 'rejected') {
-      return toast.error('The search field is empty!');
-    }
-    return (
-      <div className="App">
-        <Searchbar onSubmit={this.handleFormSubmit} />
-        {gallery && (
-          <ImageGallery
-            gallery={gallery}
-            status={status}
-            onModal={this.toggleModal}
-            modalImg={this.modalImg}
-          />
-        )}
-        {status === 'pending' && <Loader />}
-        {loadMore && <Button loadMore={this.changePage}>Load more</Button>}
-
-        {showModal && (
-          <Modal
-            onClose={this.toggleModal}
-            largeImage={this.state.largeImageURL}
-          />
-        )}
-        <ToastContainer
-          theme="colored"
-          position="top-center"
-          autoClose={2000}
-        />
-      </div>
-    );
+  if (status === 'idle') {
+    // return;
   }
+
+  if (status === 'pending') {
+    // return;
+  }
+  if (status === 'rejected') {
+    return error('The search field is empty!');
+  }
+
+  return (
+    <div className="App">
+      <Searchbar onSubmit={handleFormSubmit} />
+      {gallery && (
+        <ImageGallery
+          gallery={gallery}
+          status={status}
+          onModal={toggleModal}
+          modalImg={modalImg}
+        />
+      )}
+      {status === 'pending' && <Loader />}
+      {loadMore && <Button loadMore={changePage}>Load more</Button>}
+
+      {showModal && <Modal onClose={toggleModal} largeImage={largeImageURL} />}
+      <ToastContainer theme="colored" position="top-center" autoClose={2000} />
+    </div>
+  );
 }
